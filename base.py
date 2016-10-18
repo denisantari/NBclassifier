@@ -1,28 +1,38 @@
 
 import pandas as pd
 import abc
-import numpy as np
-import warnings
-from pandas import DataFrame, read_csv
-from sklearn import svm
-from sklearn import cross_validation
-from sklearn.cross_validation import KFold
 from sklearn.cross_validation import train_test_split
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
-
-df = pd.read_csv('data_1332_9kelas.csv')
-y = df.klasifikasi.values
-
-X = pd.read_csv('tfidf1332.csv')
-print df.head()
+from sklearn.ensemble import RandomForestClassifier
+# from sklearn.naive_bayes import MultinomialNB
+# from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+from preprocessor import Preprocessor, tf_idf
 
 
 class AlgorithmSupervised(object):
-    def __init__(self, _contents):
+    metaclass = abc.ABCMeta
 
-#
+    def __init__(self, _x):
+        self._X = _x
+
+    def random_forest(self, label):
+        x_train, x_test, y_train, y_test = train_test_split(self._X, label, test_size=.7)
+        _rfc = RandomForestClassifier(n_jobs=-1, criterion='entropy')
+        _rfc.fit(x_train, y_train)
+        return accuracy_score(y_test, _rfc.predict(x_test))
+
+    @abc.abstractmethod
+    def nb_classifier(self):
+        pass
+
+if __name__ == '__main__':
+    df = pd.read_csv('data_1332_9kelas.csv')
+    contents = df.content.tolist()
+    y = df.klasifikasi.tolist()
+    contents = Preprocessor(contents).run()
+    algorithm = AlgorithmSupervised(tf_idf(contents))
+    print 'accuracy with random forest : {}'.format(algorithm.random_forest(y))
+
 # kf = KFold(len(X), n_folds=10, shuffle=True, random_state=9999)
 # model_train_index = []
 # model_test_index = []
