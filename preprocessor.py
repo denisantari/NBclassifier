@@ -1,4 +1,4 @@
-import abc
+import abc #library abstract base class, untuk asbtraksi kelas
 import nltk
 import string
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
@@ -8,10 +8,13 @@ from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 class Preprocessor(object):
     metaclass = abc.ABCMeta
 
-    def __init__(self, contents):
+    def __init__(self, contents): #inisiasi data, data yang dibuat pada self merupakan variabel obyek
         self._contents = contents
-
-    @staticmethod
+        
+    """staticmethod digunakan untuk menggabungkan fungsi yg memupunyai beberapa logical connection with a class to the classs,
+       disini maksudnya fungsi stemmer, punctuation dan stopword adalah fungsi yg saling berkaitan"""
+    
+    @staticmethod 
     def stemmer(_contents):
         factory = StemmerFactory()
         stemmer = factory.create_stemmer()
