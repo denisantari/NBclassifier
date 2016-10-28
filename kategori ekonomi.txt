@@ -1,0 +1,11 @@
+(sektor ekonomi yg dipake untuk penentuan PDB berdasar pendekatan produksi)
+1. Pertanian, Peternakan, Kehutanan dan Perikanan
+2. Pertambangan dan Penggalian 
+3. Industri Pengolahan 
+4. Listrik, Gas dan Air Bersih
+5. Konstruksi 
+6. Perdagangan, Hotel dan Restoran
+7. Pengangkutan dan Komunikasi
+8. Keuangan, Real Estate dan Jasa Perusahaan
+9. Jasa-Jasa; Pemerintahan Umum, Jasa sosial kemasyarakatan, jasa hiburan dan rekreasi, jasa perorangan dan rumah tangga
+
