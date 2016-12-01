@@ -1,37 +1,104 @@
-
 import pandas as pd
 import abc
 from sklearn.cross_validation import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-# from sklearn.naive_bayes import MultinomialNB
-# from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
-from preprocessor import Preprocessor, tf_idf
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from preprocessor import Preprocessor
+import pickle
 
 
-class AlgorithmSupervised(object):
-    metaclass = abc.ABCMeta
+class SupervisedAlgorithm(object):
+    __metaclass__ = abc.ABCMeta
 
-    def __init__(self, _x):
-        self._X = _x
-
-    def random_forest(self, label):
-        x_train, x_test, y_train, y_test = train_test_split(self._X, label, test_size=.7)
-        _rfc = RandomForestClassifier(n_jobs=-1, criterion='entropy')
-        _rfc.fit(x_train, y_train)
-        return accuracy_score(y_test, _rfc.predict(x_test))
+    def __init__(self):
+        self._model = None
+        self._vocab = None
 
     @abc.abstractmethod
-    def nb_classifier(self):
+    def predict(self, models):
         pass
 
-if __name__ == '__main__':
-    df = pd.read_csv('data_1332_9kelas.csv')
-    contents = df.content.tolist()
-    y = df.klasifikasi.tolist()
-    contents = Preprocessor(contents).run()
-    algorithm = AlgorithmSupervised(tf_idf(contents))
-    print 'accuracy with random forest : {}'.format(algorithm.random_forest(y))
+    @abc.abstractmethod
+    def transform_to_tfidf(self, contents):
+        pass
+
+    @abc.abstractmethod
+    def update_model(self, contents, labels):
+        pass
+    
+
+class RandomForestAlgorithm(SupervisedAlgorithm):
+    def __init__(self):
+        super(RandomForestAlgorithm, self).__init__()
+        self._model = None
+        self._vocab = None
+
+    def predict(self, contents):
+        self._model, self._vocab = pickle.load(open('model/model.pkl'))
+        tfidf = self.transform_to_tfidf(contents)
+        predict = self._model.predict(tfidf)
+        return predict
+
+    def transform_to_tfidf(self, contents, get_vocab=False):
+        vector = (
+            CountVectorizer(analyzer='word', decode_error='replace',
+                            vocabulary=self._vocab)
+            if not get_vocab else (
+            CountVectorizer(analyzer='word', ngram_range=(1, 2), min_df=0.01, max_df=.9,
+                            max_features=1000, decode_error='replace')
+            )
+        )
+        vectorized = vector.fit_transform(contents)
+        return (
+            TfidfTransformer(norm='l2').fit_transform(vectorized).toarray()
+            if not get_vocab else
+            vector.vocabulary_, TfidfTransformer(norm='l2').fit_transform(vectorized).toarray()
+        )
+
+    def update_model(self, contents, labels):
+        self._vocab, tfidf = self.transform_to_tfidf(contents, get_vocab=True)
+        self._model = (RandomForestClassifier(n_jobs=-1, criterion='entropy')
+                       .fit(contents, labels))
+        pickle.dump([self._model, self._vocab], open('mode/model.pkl'))
+
+class KFold(object):
+    pass
+
+
+
+#
+# def get_vectorized(_contents):
+#     vector = CountVectorizer(analyzer='word', min_df=0.01, max_df=.9, max_features=1000, ngram_range=(1,3),
+#                              decode_error='replace')
+#     vector_train = vector.fit_transform(_contents)
+#     transformer = TfidfTransformer(norm='l2')
+#     return transformer.fit_transform(vector_train).toarray()
+#
+#
+# class AlgorithmSupervised(object):
+#     metaclass = abc.ABCMeta
+#
+#     def __init__(self, _x):
+#         self._X = _x
+#
+#     def random_forest(self, label):
+#         x_train, x_test, y_train, y_test = train_test_split(self._X, label, test_size=.7)
+#         _rfc = RandomForestClassifier(n_jobs=-1, criterion='entropy')
+#         _rfc.fit(x_train, y_train)
+#         return accuracy_score(y_test, _rfc.predict(x_test))
+#
+#     @abc.abstractmethod
+#     def nb_classifier(self):
+#         pass
+#
+# if __name__ == '__main__':
+#     df = pd.read_csv('stemming1332.csv')
+#     contents = df.hasil_stemming.tolist()
+#     y = pd.read_csv('data_1332_9kelas.csv').klasifikasi.tolist()
+#     contents = Preprocessor(contents).run()
+#     algorithm = AlgorithmSupervised(get_vectorized(contents))
+#     print 'accuracy with random forest : {}'.format(algorithm.random_forest(y))
 
 # kf = KFold(len(X), n_folds=10, shuffle=True, random_state=9999)
 # model_train_index = []

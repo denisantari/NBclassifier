@@ -1,62 +1,67 @@
 import abc #library abstract base class, untuk asbtraksi kelas
 import nltk
 import string
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+
+import time
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 
 
 class Preprocessor(object):
-    metaclass = abc.ABCMeta
+    __metaclass__ = abc.ABCMeta
 
-    def __init__(self, contents): #inisiasi data, data yang dibuat pada self merupakan variabel obyek
-        self._contents = contents
-        
+    _punctuation = string.punctuation
+    _stop_words = nltk.corpus.stopwords.words('indonesian')
+
     """staticmethod digunakan untuk menggabungkan fungsi yg memupunyai beberapa logical connection with a class to the classs,
        disini maksudnya fungsi stemmer, punctuation dan stopword adalah fungsi yg saling berkaitan"""
     
-    @staticmethod 
-    def stemmer(_contents):
+    @staticmethod
+    def stemmer(contents):
+        start = int(round(time.time() * 1000))
+        print 'Start stemming from {} docs'.format(len(contents))
+
         factory = StemmerFactory()
         stemmer = factory.create_stemmer()
-        return map(lambda content: stemmer.stem(content.lower()), _contents)
+        _stemmed = map(lambda content: stemmer.stem(content.lower()), contents)
 
-    @staticmethod
-    def punctuation_replace(_contents):
-        return map(lambda content: content.translate(None, string.punctuation), _contents)
+        end = int(round(time.time() * 1000))
+        print 'Done in : {} milliseconds'.format(end-start)
 
-    @staticmethod
-    def stopwords_remover(_contents):
+        return _stemmed
+
+    @classmethod
+    def remove_punctuation(cls, _contents):
+        return map(lambda content: content.translate(None, cls._punctuation), _contents)
+
+    @classmethod
+    def remove_stopword(cls, _contents):
+        start = int(round(time.time() * 1000))
+        print 'Start stopwords removal from {} docs'.format(len(_contents))
+
         _contents_cleared = []
         for news in _contents:
             tokenize = news.split()
             _news = [word for word in tokenize if
-                     word not in nltk.corpus.stopwords.words('indonesian') and
+                     word not in cls._stop_words and
                      not word.startswith(string.digits)]
             _contents_cleared.append(' '.join(_news))
 
-    def run(self):
-        self.stemmer(self._contents)
-        self.punctuation_replace(self._contents)
-        self.stopwords_remover(self._contents)
-        return self._contents
+        end = int(round(time.time() * 1000))
+        print 'Done in : {} milliseconds'.format(end-start)
+
+        return _contents_cleared
+
+    @classmethod
+    def run(cls, contents):
+        _contents = cls.stemmer(contents)
+        _contents = cls.remove_punctuation(_contents)
+        _contents = cls.remove_stopword(_contents)
+        return _contents
+
+if __name__ == '__main__':
+    assert Preprocessor().run(
+        contents=["Jakarta dibuat rusuh oleh pendemo",
+                  "Macetnya Jogja menyerupai Jakarta"]
+    ) == ['jakarta rusuh demo', 'macet jogja rupa jakarta'], 'We\'ve got problem dude'
 
 
-def tf_idf(_contents):
-    vector = CountVectorizer(analyzer='word', min_df=0.01, max_df=.9, max_features=1000,
-                             decode_error='replace')
-    vector_train = vector.fit_transform(_contents)
-    transformer = TfidfTransformer(norm='l2')
-    return transformer.fit_transform(vector_train).toarray()
-
-#
-# print "DF", type(df['content']), "\n", df['content']
-# isiberita = df['content'].tolist()
-# print "DF list isiberita ", isiberita, type(isiberita)
-# df.head()
-
-# path = 'D:/SKRIPSI/percobaan/1332data9klas/data_1332_tfidf.csv'
-#
-# # now we get 300 words as vocab and content_final (content that has been cleared)
-#
-# # this can take some time, this is from sklearn tfidfVectorizer
-# numpy.savetxt('D:/SKRIPSI/percobaan/tfidf1332.csv', tfidf_hasil.todense(), delimiter=',')
