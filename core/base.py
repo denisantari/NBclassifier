@@ -1,11 +1,9 @@
-import pandas as pd
 import abc
-from sklearn.cross_validation import train_test_split, KFold
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from preprocessor import Preprocessor
 import pickle
+
+from sklearn.cross_validation import KFold
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 from core.preprocessor import Preprocessor
 
@@ -30,7 +28,7 @@ class SupervisedAlgorithm(object):
         pass
 
     @abc.abstractmethod
-    def fit_model_and_predict(self, X, labels):
+    def fit_model_and_predict(self, x, labels):
         pass
 
 
@@ -52,8 +50,8 @@ class RandomForestAlgorithm(SupervisedAlgorithm):
             CountVectorizer(analyzer='word', decode_error='replace',
                             vocabulary=self._vocab)
             if not get_vocab else (
-            CountVectorizer(analyzer='word', ngram_range=(1, 2), min_df=0.01, max_df=.9,
-                            max_features=1000, decode_error='replace')
+                CountVectorizer(analyzer='word', ngram_range=(1, 2), min_df=0.01, max_df=.9,
+                                max_features=1000, decode_error='replace')
             )
         )
         vectorized = vector.fit_transform(contents)
@@ -70,9 +68,10 @@ class RandomForestAlgorithm(SupervisedAlgorithm):
                        .fit(_contents, labels))
         pickle.dump([self._model, self._vocab], open('mode/model-random-forest.pkl'))
 
-    def fit_model_and_predict(self, X, labels):
-        self._model = RandomForestClassifier(n_jobs=-1, criterion='entropy').fit(X, labels)
+    def fit_model_and_predict(self, x, labels):
+        self._model = RandomForestClassifier(n_jobs=-1, criterion='entropy').fit(x, labels)
         return self._model
+
 
 class NaiveBayesClassifier(SupervisedAlgorithm):
     def __init__(self):
@@ -89,7 +88,7 @@ class NaiveBayesClassifier(SupervisedAlgorithm):
     def update_model(self, contents, labels):
         pass
 
-    def fit_model_and_predict(self, X, labels):
+    def fit_model_and_predict(self, x, labels):
         pass
 
 
@@ -139,32 +138,6 @@ class KFoldCrossValidation(object):
 #     model+=1
 #
 
-
-
-#
-# def get_vectorized(_contents):
-#     vector = CountVectorizer(analyzer='word', min_df=0.01, max_df=.9, max_features=1000, ngram_range=(1,3),
-#                              decode_error='replace')
-#     vector_train = vector.fit_transform(_contents)
-#     transformer = TfidfTransformer(norm='l2')
-#     return transformer.fit_transform(vector_train).toarray()
-#
-#
-# class AlgorithmSupervised(object):
-#     metaclass = abc.ABCMeta
-#
-#     def __init__(self, _x):
-#         self._X = _x
-#
-#     def random_forest(self, label):
-#         x_train, x_test, y_train, y_test = train_test_split(self._X, label, test_size=.7)
-#         _rfc = RandomForestClassifier(n_jobs=-1, criterion='entropy')
-#         _rfc.fit(x_train, y_train)
-#         return accuracy_score(y_test, _rfc.predict(x_test))
-#
-#     @abc.abstractmethod
-#     def nb_classifier(self):
-#         pass
 #
 # if __name__ == '__main__':
 #     df = pd.read_csv('stemming1332.csv')
@@ -174,11 +147,6 @@ class KFoldCrossValidation(object):
 #     algorithm = AlgorithmSupervised(get_vectorized(contents))
 #     print 'accuracy with random forest : {}'.format(algorithm.random_forest(y))
 
-# kf = KFold(len(X), n_folds=10, shuffle=True, random_state=9999)
-# model_train_index = []
-# model_test_index = []
-# model = 0
-#
 # for k, (index_train, index_test) in enumerate(kf):
 #     X_train, X_test, y_train, y_test = X.ix[index_train,:], X.ix[index_test,:],y[index_train], y[index_test]
 #     clf = MultinomialNB(alpha=0.1,  fit_prior=True, class_prior=None).fit(X_train, y_train)

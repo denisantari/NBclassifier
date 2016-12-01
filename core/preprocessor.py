@@ -1,20 +1,23 @@
-import abc #library abstract base class, untuk asbtraksi kelas
+import abc  #library abstract base class, untuk asbtraksi kelas
 import nltk
 import string
-
 import time
+
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 
 
 class Preprocessor(object):
+    """
+    staticmethod digunakan untuk menggabungkan fungsi yg memupunyai beberapa logical
+    connection with a class to the classs, disini maksudnya fungsi stemmer,
+    punctuation dan stopword adalah fungsi yg saling berkaitan
+    """
+
     __metaclass__ = abc.ABCMeta
 
     _punctuation = string.punctuation
     _stop_words = nltk.corpus.stopwords.words('indonesian')
 
-    """staticmethod digunakan untuk menggabungkan fungsi yg memupunyai beberapa logical connection with a class to the classs,
-       disini maksudnya fungsi stemmer, punctuation dan stopword adalah fungsi yg saling berkaitan"""
-    
     @staticmethod
     def stemmer(contents):
         start = int(round(time.time() * 1000))
