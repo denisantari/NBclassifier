@@ -120,11 +120,6 @@ class KFoldCrossValidation(object):
         self._model = self.find_best_score(scores)
         pickle.dump([self._model, self._vocab], open('mode/model-random-forest.pkl'))
 
-# kf = KFold(len(X), n_folds=10, shuffle=True, random_state=9999)
-# model_train_index = []
-# model_test_index = []
-# model = 0
-#
 # for k, (index_train, index_test) in enumerate(kf):
 #     X_train, X_test, y_train, y_test = X.ix[index_train,:], X.ix[index_test,:],y[index_train], y[index_test]
 #     clf = MultinomialNB(alpha=0.1,  fit_prior=True, class_prior=None).fit(X_train, y_train)
@@ -146,17 +141,3 @@ class KFoldCrossValidation(object):
 #     contents = Preprocessor(contents).run()
 #     algorithm = AlgorithmSupervised(get_vectorized(contents))
 #     print 'accuracy with random forest : {}'.format(algorithm.random_forest(y))
-
-# for k, (index_train, index_test) in enumerate(kf):
-#     X_train, X_test, y_train, y_test = X.ix[index_train,:], X.ix[index_test,:],y[index_train], y[index_test]
-#     clf = MultinomialNB(alpha=0.1,  fit_prior=True, class_prior=None).fit(X_train, y_train)
-#     score = clf.score(X_test, y_test)
-#     f1score = f1_score(y_test, clf.predict(X_test))
-#     precision = precision_score(y_test, clf.predict(X_test))
-#     recall = recall_score(y_test, clf.predict(X_test))
-#     print('Model %d has accuracy %f with | f1score: %f | precision: %f | recall : %f'%(k,score, f1score, precision, recall))
-#     model_train_index.append(index_train)
-#     model_test_index.append(index_test)
-#     model+=1
-#
-# temp = df.klasifikasi
