@@ -63,5 +63,3 @@ if __name__ == '__main__':
         contents=["Jakarta dibuat rusuh oleh pendemo",
                   "Macetnya Jogja menyerupai Jakarta"]
     ) == ['jakarta rusuh demo', 'macet jogja rupa jakarta'], 'We\'ve got problem dude'
-
-
