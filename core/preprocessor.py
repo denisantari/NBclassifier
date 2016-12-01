@@ -1,9 +1,12 @@
 import abc  #library abstract base class, untuk asbtraksi kelas
 import nltk
+import os
 import string
 import time
 
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+
+absolute_path = os.path.dirname(os.path.abspath(__file__))
 
 
 class Preprocessor(object):
@@ -15,8 +18,10 @@ class Preprocessor(object):
 
     __metaclass__ = abc.ABCMeta
 
-    _punctuation = string.punctuation
-    _stop_words = nltk.corpus.stopwords.words('indonesian')
+    PUNCTUATION = string.punctuation
+    STOPWORDS = [line.rstrip('\n') for line in open(
+        absolute_path + '/stopword/indonesian'
+    )]
 
     @staticmethod
     def stemmer(contents):
@@ -34,7 +39,7 @@ class Preprocessor(object):
 
     @classmethod
     def remove_punctuation(cls, _contents):
-        return map(lambda content: content.translate(None, cls._punctuation), _contents)
+        return map(lambda content: content.translate(None, cls.PUNCTUATION), _contents)
 
     @classmethod
     def remove_stopword(cls, _contents):
@@ -45,7 +50,7 @@ class Preprocessor(object):
         for news in _contents:
             tokenize = news.split()
             _news = [word for word in tokenize if
-                     word not in cls._stop_words and
+                     word not in cls.STOPWORDS and
                      not word.startswith(string.digits)]
             _contents_cleared.append(' '.join(_news))
 

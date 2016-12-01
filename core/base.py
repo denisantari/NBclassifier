@@ -98,7 +98,7 @@ class KFoldCrossValidation(object):
         self._vocab = None
 
     @staticmethod
-    def find_best_score(scores):
+    def find_best_model(scores):
         return max(scores)[1]
 
     def run(self, contents, labels):
@@ -117,7 +117,7 @@ class KFoldCrossValidation(object):
 
             scores.append([model.score(X_test, y_test), model])
 
-        self._model = self.find_best_score(scores)
+        self._model = self.find_best_model(scores)
         pickle.dump([self._model, self._vocab], open('mode/model-random-forest.pkl'))
 
 # for k, (index_train, index_test) in enumerate(kf):
