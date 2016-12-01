@@ -1,11 +1,13 @@
 import pandas as pd
 import abc
-from sklearn.cross_validation import train_test_split
+from sklearn.cross_validation import train_test_split, KFold
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from preprocessor import Preprocessor
 import pickle
+
+from core.preprocessor import Preprocessor
 
 
 class SupervisedAlgorithm(object):
@@ -26,7 +28,11 @@ class SupervisedAlgorithm(object):
     @abc.abstractmethod
     def update_model(self, contents, labels):
         pass
-    
+
+    @abc.abstractmethod
+    def fit_model_and_predict(self, X, labels):
+        pass
+
 
 class RandomForestAlgorithm(SupervisedAlgorithm):
     def __init__(self):
@@ -35,8 +41,9 @@ class RandomForestAlgorithm(SupervisedAlgorithm):
         self._vocab = None
 
     def predict(self, contents):
-        self._model, self._vocab = pickle.load(open('model/model.pkl'))
-        tfidf = self.transform_to_tfidf(contents)
+        _contents = Preprocessor().run(contents)
+        self._model, self._vocab = pickle.load(open('model/model-random-forest.pkl'))
+        tfidf = self.transform_to_tfidf(_contents)
         predict = self._model.predict(tfidf)
         return predict
 
@@ -57,13 +64,80 @@ class RandomForestAlgorithm(SupervisedAlgorithm):
         )
 
     def update_model(self, contents, labels):
-        self._vocab, tfidf = self.transform_to_tfidf(contents, get_vocab=True)
+        _contents = Preprocessor().run(contents)
+        self._vocab, tfidf = self.transform_to_tfidf(_contents, get_vocab=True)
         self._model = (RandomForestClassifier(n_jobs=-1, criterion='entropy')
-                       .fit(contents, labels))
-        pickle.dump([self._model, self._vocab], open('mode/model.pkl'))
+                       .fit(_contents, labels))
+        pickle.dump([self._model, self._vocab], open('mode/model-random-forest.pkl'))
 
-class KFold(object):
-    pass
+    def fit_model_and_predict(self, X, labels):
+        self._model = RandomForestClassifier(n_jobs=-1, criterion='entropy').fit(X, labels)
+        return self._model
+
+class NaiveBayesClassifier(SupervisedAlgorithm):
+    def __init__(self):
+        super(NaiveBayesClassifier, self).__init__()
+        self._model = None
+        self._vocab = None
+
+    def predict(self, models):
+        pass
+
+    def transform_to_tfidf(self, contents):
+        pass
+
+    def update_model(self, contents, labels):
+        pass
+
+    def fit_model_and_predict(self, X, labels):
+        pass
+
+
+class KFoldCrossValidation(object):
+    def __init__(self):
+        self._model = None
+        self._vocab = None
+
+    @staticmethod
+    def find_best_score(scores):
+        return max(scores)[1]
+
+    def run(self, contents, labels):
+        _contents = Preprocessor().run(contents)
+        self._vocab, X = RandomForestAlgorithm().transform_to_tfidf(_contents, get_vocab=True)
+        kfold = KFold(len(X), n_folds=10, shuffle=True, random_state=9999)
+
+        scores = []
+
+        for k, (index_train, index_test) in enumerate(kfold):
+
+            X_train, X_test, y_train, y_test = \
+                X[index_train], X[index_test], labels[index_train], labels[index_test]
+
+            model = RandomForestAlgorithm().fit_model_and_predict(X_train, y_train)
+
+            scores.append([model.score(X_test, y_test), model])
+
+        self._model = self.find_best_score(scores)
+        pickle.dump([self._model, self._vocab], open('mode/model-random-forest.pkl'))
+
+# kf = KFold(len(X), n_folds=10, shuffle=True, random_state=9999)
+# model_train_index = []
+# model_test_index = []
+# model = 0
+#
+# for k, (index_train, index_test) in enumerate(kf):
+#     X_train, X_test, y_train, y_test = X.ix[index_train,:], X.ix[index_test,:],y[index_train], y[index_test]
+#     clf = MultinomialNB(alpha=0.1,  fit_prior=True, class_prior=None).fit(X_train, y_train)
+#     score = clf.score(X_test, y_test)
+#     f1score = f1_score(y_test, clf.predict(X_test))
+#     precision = precision_score(y_test, clf.predict(X_test))
+#     recall = recall_score(y_test, clf.predict(X_test))
+#     print('Model %d has accuracy %f with | f1score: %f | precision: %f | recall : %f'%(k,score, f1score, precision, recall))
+#     model_train_index.append(index_train)
+#     model_test_index.append(index_test)
+#     model+=1
+#
 
 
 
