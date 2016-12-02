@@ -1,5 +1,4 @@
 import abc  #library abstract base class, untuk asbtraksi kelas
-import nltk
 import os
 import string
 import time
@@ -22,48 +21,45 @@ class Preprocessor(object):
     STOPWORDS = [line.rstrip('\n') for line in open(
         absolute_path + '/stopword/indonesian'
     )]
+    DIGITS = string.digits
 
     @staticmethod
-    def stemmer(contents):
-        start = int(round(time.time() * 1000))
-        print 'Start stemming from {} docs'.format(len(contents))
-
+    def stemmer(content):
         factory = StemmerFactory()
         stemmer = factory.create_stemmer()
-        _stemmed = map(lambda content: stemmer.stem(content.lower()), contents)
+        stemmed = stemmer.stem(content)
 
-        end = int(round(time.time() * 1000))
-        print 'Done in : {} milliseconds'.format(end-start)
-
-        return _stemmed
+        return stemmed
 
     @classmethod
-    def remove_punctuation(cls, _contents):
-        return map(lambda content: content.translate(None, cls.PUNCTUATION), _contents)
+    def remove_punctuation(cls, content):
+        return content.translate(None, cls.PUNCTUATION)
 
     @classmethod
-    def remove_stopword(cls, _contents):
-        start = int(round(time.time() * 1000))
-        print 'Start stopwords removal from {} docs'.format(len(_contents))
+    def remove_stopword(cls, content):
+        tokenize = content.split()
+        content_cleared = [word for word in tokenize if word not in cls.STOPWORDS and
+                           not word.startswith(cls.DIGITS)]
 
-        _contents_cleared = []
-        for news in _contents:
-            tokenize = news.split()
-            _news = [word for word in tokenize if
-                     word not in cls.STOPWORDS and
-                     not word.startswith(string.digits)]
-            _contents_cleared.append(' '.join(_news))
-
-        end = int(round(time.time() * 1000))
-        print 'Done in : {} milliseconds'.format(end-start)
-
-        return _contents_cleared
+        return ' '.join(content_cleared)
 
     @classmethod
     def run(cls, contents):
-        _contents = cls.stemmer(contents)
-        _contents = cls.remove_punctuation(_contents)
-        _contents = cls.remove_stopword(_contents)
+
+        start = int(round(time.time()))
+        print 'Start preprocessing from {} docs'.format(len(contents))
+
+        _contents = []
+        for content in contents:
+            content = content.lower()
+            content = cls.stemmer(content)
+            content = cls.remove_punctuation(content)
+            content = cls.remove_stopword(content)
+            _contents.append(content)
+
+        end = int(round(time.time()))
+        print 'Done in : {} seconds'.format(end-start)
+
         return _contents
 
 if __name__ == '__main__':
