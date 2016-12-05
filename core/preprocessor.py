@@ -17,11 +17,11 @@ class Preprocessor(object):
 
     __metaclass__ = abc.ABCMeta
 
-    PUNCTUATION = string.punctuation
-    STOPWORDS = [line.rstrip('\n') for line in open(
+    punctuation = string.punctuation
+    stopwords = [line.rstrip('\n') for line in open(
         absolute_path + '/stopword/indonesian'
     )]
-    DIGITS = string.digits
+    digits = string.digits
 
     @staticmethod
     def stemmer(content):
@@ -33,13 +33,13 @@ class Preprocessor(object):
 
     @classmethod
     def remove_punctuation(cls, content):
-        return content.translate(None, cls.PUNCTUATION)
+        return content.translate(None, cls.punctuation)
 
     @classmethod
     def remove_stopword(cls, content):
         tokenize = content.split()
-        content_cleared = [word for word in tokenize if word not in cls.STOPWORDS and
-                           not word.startswith(cls.DIGITS)]
+        content_cleared = [word for word in tokenize if word not in cls.stopwords and
+                           not word.startswith(cls.digits)]
 
         return ' '.join(content_cleared)
 
@@ -50,6 +50,9 @@ class Preprocessor(object):
         print 'Start preprocessing from {} docs'.format(len(contents))
 
         _contents = []
+        contents = (
+            [contents] if not isinstance(contents, list) else (contents)
+        )
         for content in contents:
             content = content.lower()
             content = cls.stemmer(content)

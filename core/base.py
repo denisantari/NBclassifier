@@ -40,7 +40,8 @@ class RandomForestAlgorithm(SupervisedAlgorithm):
 
     def predict(self, contents):
         _contents = Preprocessor().run(contents)
-        self._model, self._vocab = pickle.load(open('model/model-random-forest.pkl'))
+        self._model, self._vocab = pickle.load(
+            open('core/model/model-random-forest.pkl', 'rb'))
         tfidf = self.transform_to_tfidf(_contents)
         predict = self._model.predict(tfidf)
         return predict
@@ -55,18 +56,21 @@ class RandomForestAlgorithm(SupervisedAlgorithm):
             )
         )
         vectorized = vector.fit_transform(contents)
-        return (
+        result = (
             TfidfTransformer(norm='l2').fit_transform(vectorized).toarray()
-            if not get_vocab else
-            vector.vocabulary_, TfidfTransformer(norm='l2').fit_transform(vectorized).toarray()
+            if not get_vocab else (
+                vector.vocabulary_, TfidfTransformer(norm='l2').fit_transform(vectorized).toarray()
+            )
         )
+        return result
 
     def update_model(self, contents, labels):
         _contents = Preprocessor().run(contents)
         self._vocab, tfidf = self.transform_to_tfidf(_contents, get_vocab=True)
         self._model = (RandomForestClassifier(n_jobs=-1, criterion='entropy')
                        .fit(_contents, labels))
-        pickle.dump([self._model, self._vocab], open('mode/model-random-forest.pkl'))
+        pickle.dump([self._model, self._vocab],
+                    open('core/model/model-random-forest.pkl', 'wb'))
 
     def fit_model_and_predict(self, x, labels):
         self._model = RandomForestClassifier(n_jobs=-1, criterion='entropy').fit(x, labels)
@@ -99,7 +103,7 @@ class KFoldCrossValidation(object):
 
     @staticmethod
     def find_best_model(scores):
-        return max(scores)[1]
+        return max(scores)
 
     def run(self, contents, labels):
         _contents = Preprocessor().run(contents)
@@ -117,8 +121,11 @@ class KFoldCrossValidation(object):
 
             scores.append([model.score(X_test, y_test), model])
 
-        self._model = self.find_best_model(scores)
-        pickle.dump([self._model, self._vocab], open('mode/model-random-forest.pkl'))
+        best_scores = self.find_best_model(scores)
+        self._model = best_scores[1]
+        print 'Best score : {}'.format(best_scores[0])
+        pickle.dump([self._model, self._vocab],
+                    open('core/model/model-random-forest.pkl', 'wb'))
 
 # for k, (index_train, index_test) in enumerate(kf):
 #     X_train, X_test, y_train, y_test = X.ix[index_train,:], X.ix[index_test,:],y[index_train], y[index_test]
@@ -131,13 +138,3 @@ class KFoldCrossValidation(object):
 #     model_train_index.append(index_train)
 #     model_test_index.append(index_test)
 #     model+=1
-#
-
-#
-# if __name__ == '__main__':
-#     df = pd.read_csv('stemming1332.csv')
-#     contents = df.hasil_stemming.tolist()
-#     y = pd.read_csv('data_1332_9kelas.csv').klasifikasi.tolist()
-#     contents = Preprocessor(contents).run()
-#     algorithm = AlgorithmSupervised(get_vectorized(contents))
-#     print 'accuracy with random forest : {}'.format(algorithm.random_forest(y))
