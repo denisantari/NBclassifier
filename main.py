@@ -9,6 +9,7 @@ if __name__ == '__main__':
         print 'Hello wanderer'
         time.sleep(3)
         print 'Go sleep, you\'re tired'
+        print 'test'
         print 'We\'ll work when you sleep\nWhat do you want ?' \
               '\nPlease type kfold or get_news_classification'
 
